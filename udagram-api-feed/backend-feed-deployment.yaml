@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-feed
+  labels:
+    app: backend-feed
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend-feed
+  template:
+    metadata:
+      labels:
+        app: backend-feed
+    spec:
+      containers:
+      - name: backend-feed
+        image: trgnguyen/udagram-api-feed:latest
+        ports:
+        - containerPort: 8080
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "2048Mi"
+            cpu: "600m"
+          limits:
+            memory: "2048Mi"
+            cpu: "600m"                  
+        envFrom:
+          - configMapRef:
+              name: env-config
+              optional: false 
+        env:
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: env-secret
+                key: POSTGRES_PASSWORD
+          - name: POSTGRES_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: env-secret
+                key: POSTGRES_USERNAME        
+        volumeMounts:
+        - name: aws-secret
+          mountPath: "/root/.aws"
+          readOnly: true
+      volumes:
+      - name: aws-secret
+        secret:
+          secretName: aws-secret
